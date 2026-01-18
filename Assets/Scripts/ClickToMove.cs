@@ -1,7 +1,9 @@
 using Pathfinding;
 using UnityEngine;
 
-public class ClickToMove : MonoBehaviour, IClickable
+using Unity.Netcode;
+
+public class ClickToMove : NetworkBehaviour, IClickable
 {
     private Seeker seeker;
     private AILerp aiLerp;
@@ -26,6 +28,8 @@ public class ClickToMove : MonoBehaviour, IClickable
 
     public void OnClick(Vector3 position)
     {
+        if (!IsOwner) return;
+
         GraphNode nearestNode = astarPath.GetNearest(position).node;
 
         if (nearestNode != null && nearestNode.Walkable)
@@ -55,6 +59,8 @@ public class ClickToMove : MonoBehaviour, IClickable
 
     private void Update()
     {
+        if (!IsOwner) return;
+
         // Direction calculation based on actual movement
         Vector3 displacement = transform.position - previousPosition;
         if (displacement.magnitude > 0.001f) // Use a threshold to prevent small inaccuracies
