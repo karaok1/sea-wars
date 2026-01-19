@@ -9,6 +9,8 @@ public class MultiplayerController : MonoBehaviour
         if (NetworkManager.Singleton != null)
         {
             NetworkManager.Singleton.OnServerStarted += OnServerStarted;
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
         }
 
         string[] args = Environment.GetCommandLineArgs();
@@ -27,12 +29,24 @@ public class MultiplayerController : MonoBehaviour
         if (NetworkManager.Singleton != null)
         {
             NetworkManager.Singleton.OnServerStarted -= OnServerStarted;
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         }
     }
 
     private void OnServerStarted()
     {
         Debug.Log("Server Started");
+    }
+
+    private void OnClientConnected(ulong clientId)
+    {
+        Debug.Log($"Client Connected: {clientId}");
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        Debug.LogError($"Client Disconnected: {clientId}. Possible Connection Timeout or Server Shutdown.");
     }
 
     private void StartHeadlessServer()
