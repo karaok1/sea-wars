@@ -6,6 +6,11 @@ public class MultiplayerController : MonoBehaviour
 {
     private void Start()
     {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnServerStarted += OnServerStarted;
+        }
+
         string[] args = Environment.GetCommandLineArgs();
         for (int i = 0; i < args.Length; i++)
         {
@@ -15,6 +20,19 @@ public class MultiplayerController : MonoBehaviour
                 return;
             }
         }
+    }
+
+    private void OnDestroy()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnServerStarted -= OnServerStarted;
+        }
+    }
+
+    private void OnServerStarted()
+    {
+        Debug.Log("Server Started");
     }
 
     private void StartHeadlessServer()
