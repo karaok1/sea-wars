@@ -27,8 +27,8 @@ public class InputHandler : MonoBehaviour
     private void Awake()
     {
         _mainCamera = Camera.main;
-        clickToMove = FindObjectOfType<ClickToMove>();
-        gameManager = FindObjectOfType<GameManager>();
+        clickToMove = FindFirstObjectByType<ClickToMove>();
+        gameManager = FindFirstObjectByType<GameManager>();
     }
 
     private void Start()
