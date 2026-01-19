@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using Unity.Netcode;
 
 public class InputHandler : MonoBehaviour
 {
@@ -48,6 +49,34 @@ public class InputHandler : MonoBehaviour
         return click_results.Count > 0;
     }
 
+    private bool EnsurePlayerFound()
+    {
+        if (player != null && clickToMove != null) return true;
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsClient && NetworkManager.Singleton.LocalClient?.PlayerObject != null)
+        {
+            var netPlayer = NetworkManager.Singleton.LocalClient.PlayerObject.gameObject;
+            player = netPlayer;
+            clickToMove = netPlayer.GetComponent<ClickToMove>();
+        }
+        
+        if (clickToMove == null)
+        {
+            clickToMove = FindFirstObjectByType<ClickToMove>();
+            if (clickToMove != null && player == null)
+            {
+                player = clickToMove.gameObject;
+            }
+        }
+
+        if (player == null && clickToMove != null)
+        {
+            player = clickToMove.gameObject;
+        }
+        
+        return player != null && clickToMove != null;
+    }
+
     public void OnClick(InputAction.CallbackContext context)
     {
         if (!context.started) return;
@@ -65,10 +94,13 @@ public class InputHandler : MonoBehaviour
         }
         else
         {
-            Vector3 mousePosition = Mouse.current.position.ReadValue();
-            mousePosition.z = -_mainCamera.transform.position.z;
-            Vector3 worldPosition = _mainCamera.ScreenToWorldPoint(mousePosition);
-            clickToMove.OnClick(worldPosition);
+            if (EnsurePlayerFound())
+            {
+                Vector3 mousePosition = Mouse.current.position.ReadValue();
+                mousePosition.z = -_mainCamera.transform.position.z;
+                Vector3 worldPosition = _mainCamera.ScreenToWorldPoint(mousePosition);
+                clickToMove.OnClick(worldPosition);
+            }
         }
     }
     
@@ -78,12 +110,16 @@ public class InputHandler : MonoBehaviour
 
         if (IsClickOverUI()) return;
 
+        if (!EnsurePlayerFound()) return;
+
         var target = gameManager.GetComponent<SelectObject>().selectedNPC;
         player.GetComponent<Cannon>().StartShooting(target);
     }
 
     public void OnShootButtonPress()
     {
+        if (!EnsurePlayerFound()) return;
+        
         var target = gameManager.GetComponent<SelectObject>().selectedNPC;
         player.GetComponent<Cannon>().StartShooting(target);
         startShootingButton.GetComponent<Image>().color = Color.red;
@@ -91,6 +127,8 @@ public class InputHandler : MonoBehaviour
     
     public void OnStopShootButtonPress()
     {
+        if (!EnsurePlayerFound()) return;
+        
         player.GetComponent<Cannon>().StopShooting();
         startShootingButton.GetComponent<Image>().color = Color.white;
     }
